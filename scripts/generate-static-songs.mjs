@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
@@ -7,15 +8,21 @@ const rootDir = process.cwd();
 const lyricsDir = path.join(rootDir, "data", "lyrics");
 const outputFile = path.join(rootDir, "public", "data", "songs.json");
 
-function slugify(input) {
-  const normalized = input
-    .normalize("NFC")
-    .toLowerCase()
-    .replace(/[^a-z0-9가-힣]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
+function buildSongId(seed, usedIds) {
+  const base = `song${createHash("sha1").update(seed).digest("hex").slice(0, 12)}`;
+  if (!usedIds.has(base)) {
+    usedIds.add(base);
+    return base;
+  }
 
-  return normalized || "song";
+  let suffix = 2;
+  while (usedIds.has(`${base}${suffix}`)) {
+    suffix += 1;
+  }
+
+  const id = `${base}${suffix}`;
+  usedIds.add(id);
+  return id;
 }
 
 function splitArtistAndTitle(fileName) {
@@ -112,7 +119,7 @@ async function readLyricsFiles() {
 async function main() {
   const txtFiles = await readLyricsFiles();
   const createdAt = new Date().toISOString();
-  const slugCounts = new Map();
+  const usedIds = new Set();
   const songs = [];
 
   for (const fileName of txtFiles) {
@@ -122,15 +129,10 @@ async function main() {
     const slides = parseSlides(content, fileName);
     const { chorusFirstLine, verse1FirstLine } = getFirstLines(slides);
 
-    let slug = slugify(`${artist}-${title}`);
-    const count = (slugCounts.get(slug) ?? 0) + 1;
-    slugCounts.set(slug, count);
-    if (count > 1) {
-      slug = `${slug}-${count}`;
-    }
+    const songId = buildSongId(`${artist}\u0000${title}`, usedIds);
 
     songs.push({
-      id: slug,
+      id: songId,
       title,
       artist,
       chorus_first_line: chorusFirstLine,
