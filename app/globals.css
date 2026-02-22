@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Pretendard Variable", "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color: #12192c;
+  background:
+    radial-gradient(circle at 92% -5%, rgba(31, 87, 217, 0.12), transparent 38%),
+    radial-gradient(circle at -8% 96%, rgba(95, 112, 143, 0.12), transparent 36%),
+    linear-gradient(180deg, #ffffff 0%, #f7f7f2 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.panel {
+  @apply rounded-[2px] border-2 border-[#12192c] bg-white shadow-[4px_4px_0_0_#12192c];
+}
+
+.label {
+  @apply mb-2 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7f8ea7];
+}
+
+.input {
+  @apply w-full rounded-[2px] border-2 border-[#d3dbe9] bg-white px-3 py-2.5 text-sm font-medium text-[#10172a] outline-none transition placeholder:text-[#b9c3d3] focus:border-[#1f57d9] focus:ring-0;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-[2px] border-2 border-[#1f57d9] bg-[#1f57d9] px-4 py-2 text-sm font-bold text-white transition hover:border-[#1a49b7] hover:bg-[#1a49b7] disabled:cursor-not-allowed disabled:opacity-55;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-[2px] border-2 border-[#12192c] bg-white px-4 py-2 text-sm font-semibold text-[#12192c] transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_0_#12192c] disabled:cursor-not-allowed disabled:opacity-50;
+}
