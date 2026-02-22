@@ -234,7 +234,7 @@ export default function HomePage() {
                           <div className="min-w-0">
                             <p className="truncate text-[11px] font-medium text-[var(--text-muted)]">{getSongMetaLabel(result.song)}</p>
                             <Link
-                              href={`/song/${result.song.id}`}
+                              href={`/song/${encodeURIComponent(result.song.id)}/`}
                               prefetch={false}
                               className="block truncate text-base font-bold text-[var(--text-strong)] hover:underline"
                             >
@@ -243,7 +243,7 @@ export default function HomePage() {
                           </div>
                           <div className="min-w-0">
                             <Link
-                              href={`/song/${result.song.id}`}
+                              href={`/song/${encodeURIComponent(result.song.id)}/`}
                               prefetch={false}
                               className="block whitespace-pre-line text-sm font-medium leading-relaxed text-[var(--text-soft)] transition hover:text-[var(--primary)]"
                               onMouseEnter={(event) => openLyricsPopup(event, result, rowKey)}

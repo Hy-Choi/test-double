@@ -29,14 +29,16 @@ function splitArtistAndTitle(fileName) {
 
   const artist = baseName.slice(0, separatorIndex).trim();
   const title = baseName.slice(separatorIndex + 1).trim();
+  const normalizedArtist = artist.normalize("NFC");
+  const normalizedTitle = title.normalize("NFC");
 
-  if (!artist || !title) {
+  if (!normalizedArtist || !normalizedTitle) {
     throw new Error(
       `Invalid filename "${fileName}". Artist and title must be non-empty.`
     );
   }
 
-  return { artist, title };
+  return { artist: normalizedArtist, title: normalizedTitle };
 }
 
 function parseSlides(content, fileName) {
