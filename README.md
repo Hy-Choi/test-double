@@ -103,6 +103,7 @@ npm run build
 - `npm run build`: static production build (`next build` + export)
 
 ## Notes
+- `/song` provides a full song list, so you do not need to know `song-id` manually.
 - `/admin/song-new` and `/admin/search-weight` are operation guide pages in static mode.
 - Search weights are controlled in `lib/search-ranking.ts` (`DEFAULT_WEIGHTS`).
 - No database or server API is required.
