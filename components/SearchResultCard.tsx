@@ -11,7 +11,7 @@ export default function SearchResultCard({ result }: SearchResultCardProps) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-xl font-bold text-[#131b2e]">
-            <Link href={`/song/${encodeURIComponent(result.song.id)}/`} className="hover:underline">
+            <Link href={`/song/${encodeURIComponent(result.song.id)}/index`} className="hover:underline">
               {result.song.title}
             </Link>
           </h3>

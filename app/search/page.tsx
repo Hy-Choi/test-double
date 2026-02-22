@@ -57,7 +57,7 @@ export default function SearchPage() {
                 results.slice(0, 12).map((result, index) => (
                   <Link
                     key={`${result.song.id}-${index}`}
-                    href={`/song/${encodeURIComponent(result.song.id)}/`}
+                    href={`/song/${encodeURIComponent(result.song.id)}/index`}
                     prefetch={false}
                     className="block rounded-[2px] border border-soft bg-panel px-3 py-2 text-sm transition hover:border-[var(--primary)]"
                   >
@@ -103,7 +103,7 @@ export default function SearchPage() {
               suggestions.map((item) => (
                 <Link
                   key={item.song_id}
-                  href={`/song/${encodeURIComponent(item.song_id)}/`}
+                  href={`/song/${encodeURIComponent(item.song_id)}/index`}
                   prefetch={false}
                   className="block rounded-lg border border-soft bg-panel px-3 py-2 text-sm transition hover:border-[var(--primary)]"
                 >
