@@ -1,0 +1,34 @@
+[
+  {
+    "id": "마커스-입례",
+    "title": "입례",
+    "artist": "마커스",
+    "chorus_first_line": "이곳에 오셔서",
+    "verse1_first_line": "이곳에 앉으소서",
+    "two_line_units": [
+      "이곳에 오셔서\n이곳에 앉으소서",
+      "주님만 예배하리\n주님만 찬양하리"
+    ],
+    "lyrics_full": "이곳에 오셔서\n이곳에 앉으소서\n\n주님만 예배하리\n주님만 찬양하리",
+    "copyright_holder": null,
+    "ccli_number": null,
+    "tags": null,
+    "created_at": "2026-02-22T17:02:13.184Z"
+  },
+  {
+    "id": "예배팀-주의은혜",
+    "title": "주의은혜",
+    "artist": "예배팀",
+    "chorus_first_line": "주의 은혜라",
+    "verse1_first_line": "주의 은혜라",
+    "two_line_units": [
+      "주의 은혜라\n주의 은혜라",
+      "내가 지금까지\n지내온 것도"
+    ],
+    "lyrics_full": "주의 은혜라\n주의 은혜라\n\n내가 지금까지\n지내온 것도",
+    "copyright_holder": null,
+    "ccli_number": null,
+    "tags": null,
+    "created_at": "2026-02-22T17:02:13.184Z"
+  }
+]

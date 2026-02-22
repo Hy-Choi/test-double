@@ -6,12 +6,13 @@
     "dev": "npm run dev:reset && next dev --port 3010",
     "dev:raw": "next dev --port 3010",
     "dev:reset": "bash ./scripts/dev-reset.sh",
+    "songs:sync": "node ./scripts/generate-static-songs.mjs",
+    "prebuild": "npm run songs:sync",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.53.0",
     "jszip": "^3.10.1",
     "next": "^15.5.12",
     "react": "^19.0.0",

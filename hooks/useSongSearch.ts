@@ -1,7 +1,8 @@
 "use client";
 
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { SearchResult, SearchSuggestion, SearchWeightConfig } from "@/types/song";
+import { buildSuggestions, rankSongs } from "@/lib/search-ranking";
+import { SearchResult, SearchSuggestion, SearchWeightConfig, Song } from "@/types/song";
 
 interface SearchApiResponse {
   query: string;
@@ -41,6 +42,9 @@ const defaultCacheTtlMs = 20_000;
 const staleCacheMaxAgeMs = 120_000;
 const queryCache = new Map<string, CachedSearchData>();
 
+let songsCache: Song[] | null = null;
+let songsPromise: Promise<Song[]> | null = null;
+
 function normalizeCacheKey(query: string, includeSuggestions: boolean) {
   const normalized = query.trim().normalize("NFC").toLowerCase();
   return `${includeSuggestions ? "1" : "0"}:${normalized}`;
@@ -61,6 +65,40 @@ function purgeExpiredCacheEntries(now: number) {
   }
 }
 
+async function loadSongs() {
+  if (songsCache) {
+    return songsCache;
+  }
+
+  if (songsPromise) {
+    return songsPromise;
+  }
+
+  songsPromise = (async () => {
+    const response = await fetch("/data/songs.json", {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load songs.json (${response.status})`);
+    }
+
+    const payload = (await response.json()) as unknown;
+    if (!Array.isArray(payload)) {
+      throw new Error("Invalid songs.json format: expected an array");
+    }
+
+    songsCache = payload as Song[];
+    return songsCache;
+  })();
+
+  try {
+    return await songsPromise;
+  } finally {
+    songsPromise = null;
+  }
+}
+
 export function useSongSearch(options: UseSongSearchOptions): UseSongSearchResult {
   const debounceMs = options.debounceMs ?? defaultDebounceMs;
   const cacheTtlMs = options.cacheTtlMs ?? defaultCacheTtlMs;
@@ -75,26 +113,27 @@ export function useSongSearch(options: UseSongSearchOptions): UseSongSearchResul
 
   const requestSeqRef = useRef(0);
   const debounceTimerRef = useRef<number | null>(null);
-  const controllerRef = useRef<AbortController | null>(null);
   const inFlightKeyRef = useRef<string | null>(null);
   const lastFetchedAtRef = useRef<Map<string, number>>(new Map());
 
   const resetStateForEmptyQuery = useCallback(() => {
     requestSeqRef.current += 1;
-    controllerRef.current?.abort();
-    controllerRef.current = null;
+    inFlightKeyRef.current = null;
     setResults([]);
     setSuggestions([]);
     setLoading(false);
     setError(null);
   }, []);
 
-  const applyPayload = useCallback((payload: SearchApiResponse) => {
-    setResults(payload.results ?? []);
-    setSuggestions(payload.suggestions ?? []);
-    setWeights(payload.weights ?? options.initialWeights);
-    setError(null);
-  }, [options.initialWeights]);
+  const applyPayload = useCallback(
+    (payload: SearchApiResponse) => {
+      setResults(payload.results ?? []);
+      setSuggestions(payload.suggestions ?? []);
+      setWeights(payload.weights ?? options.initialWeights);
+      setError(null);
+    },
+    [options.initialWeights]
+  );
 
   const fetchSearch = useCallback(
     async (trimmed: string, key: string, silent: boolean) => {
@@ -102,13 +141,6 @@ export function useSongSearch(options: UseSongSearchOptions): UseSongSearchResul
 
       const requestSeq = requestSeqRef.current + 1;
       requestSeqRef.current = requestSeq;
-
-      if (controllerRef.current && inFlightKeyRef.current !== key) {
-        controllerRef.current.abort();
-      }
-
-      const controller = new AbortController();
-      controllerRef.current = controller;
       inFlightKeyRef.current = key;
 
       if (!silent) {
@@ -117,36 +149,33 @@ export function useSongSearch(options: UseSongSearchOptions): UseSongSearchResul
       }
 
       try {
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(trimmed)}&includeSuggestions=${includeSuggestions ? "1" : "0"}`,
-          {
-            cache: "no-store",
-            signal: controller.signal
-          }
-        );
-        const data = (await response.json()) as SearchApiResponse;
+        const songs = await loadSongs();
 
         if (requestSeq !== requestSeqRef.current) return;
-        if (!response.ok || data.error) {
-          throw new Error(data.error ?? "Search request failed");
-        }
 
-        applyPayload(data);
+        const nextWeights = options.initialWeights;
+        const nextResults = rankSongs(songs, trimmed, nextWeights).slice(0, 50);
+        const nextSuggestions = includeSuggestions
+          ? buildSuggestions(songs, trimmed, nextWeights, 8)
+          : [];
+
+        const payload: SearchApiResponse = {
+          query: trimmed,
+          weights: nextWeights,
+          results: nextResults,
+          suggestions: nextSuggestions
+        };
+
+        applyPayload(payload);
         const fetchedAt = Date.now();
         queryCache.set(key, {
           expiresAt: fetchedAt + cacheTtlMs,
           fetchedAt,
-          payload: data
+          payload
         });
         lastFetchedAtRef.current.set(key, fetchedAt);
       } catch (requestError) {
         if (requestSeq !== requestSeqRef.current) return;
-
-        const isAbort =
-          requestError instanceof DOMException
-            ? requestError.name === "AbortError"
-            : requestError instanceof Error && requestError.name === "AbortError";
-        if (isAbort) return;
 
         if (!silent) {
           setResults([]);
@@ -161,12 +190,9 @@ export function useSongSearch(options: UseSongSearchOptions): UseSongSearchResul
         if (inFlightKeyRef.current === key) {
           inFlightKeyRef.current = null;
         }
-        if (controllerRef.current === controller) {
-          controllerRef.current = null;
-        }
       }
     },
-    [applyPayload, cacheTtlMs, includeSuggestions]
+    [applyPayload, cacheTtlMs, includeSuggestions, options.initialWeights]
   );
 
   const runSearch = useCallback(
@@ -238,7 +264,6 @@ export function useSongSearch(options: UseSongSearchOptions): UseSongSearchResul
       if (debounceTimerRef.current !== null) {
         window.clearTimeout(debounceTimerRef.current);
       }
-      controllerRef.current?.abort();
     };
   }, []);
 
