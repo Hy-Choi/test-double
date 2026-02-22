@@ -30,7 +30,7 @@ export default async function SongIndexPage() {
         {songs.map((song) => (
           <Link
             key={song.id}
-            href={`/song/${encodeURIComponent(song.id)}/index`}
+            href={`/song/${encodeURIComponent(song.id)}/`}
             className="panel block p-5 transition hover:-translate-x-0.5 hover:-translate-y-0.5"
           >
             <p className="text-xl font-bold text-[#131b2e]">{song.title}</p>
